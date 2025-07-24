@@ -16,18 +16,34 @@ import os
 def load_and_prepare_data():
     """Load and prepare the cardiovascular disease dataset."""
     try:
-        # Load the real dataset
-        df = pd.read_csv('cardio_base.csv', delimiter=';')
+        # Get the directory where this script is located
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        csv_path = os.path.join(script_dir, 'cardio_base.csv')
+        
+        # Load the real dataset with explicit column names
+        df = pd.read_csv(csv_path, delimiter=';', names=[
+            'id', 'age', 'gender', 'height', 'weight', 
+            'ap_hi', 'ap_lo', 'cholesterol', 'gluc', 
+            'smoke', 'alco', 'active', 'cardio'
+        ])
         
         if df is None or df.empty:
             raise FileNotFoundError("CSV file is empty or could not be loaded")
             
         print("✅ Successfully loaded real cardiovascular disease data")
         print(f"📊 Dataset shape: {df.shape}")
+        print(f"📋 Columns found: {df.columns.tolist()}")
         
         # Basic data cleaning
         df = df.drop('id', axis=1, errors='ignore')  # Remove ID column if it exists
         df = df.dropna()  # Remove any rows with missing values
+        
+        # Verify required columns exist
+        required_columns = ['age', 'gender', 'height', 'weight', 'ap_hi', 'ap_lo', 
+                          'cholesterol', 'gluc', 'smoke', 'alco', 'active', 'cardio']
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        if missing_columns:
+            raise ValueError(f"Missing required columns: {missing_columns}")
         
         # Convert age from days to years
         df['age'] = (df['age'] / 365).round().astype(int)
@@ -43,12 +59,16 @@ def load_and_prepare_data():
         print("✨ Data cleaning complete")
         print(f"📊 Final dataset shape: {df.shape}")
         
-        return df
+        # Split features and target
+        X = df.drop('cardio', axis=1)
+        y = df['cardio']
+        
+        return X, y
         
     except FileNotFoundError:
         error_msg = """
         ❌ Error: cardio_base.csv file not found!
-
+        
         Please download the dataset from:
         https://www.kaggle.com/datasets/colewelkins/cardiovascular-disease
         
@@ -56,6 +76,9 @@ def load_and_prepare_data():
         summative/API/cardio_base.csv
         """
         print(error_msg)
+        raise
+    except Exception as e:
+        print(f"❌ Error processing data: {str(e)}")
         raise
 
 def train_models():
