@@ -36,31 +36,40 @@ def load_and_prepare_data():
             continue
     
     if df is None:
-        # Create synthetic data if CSV is not found (for deployment)
         print("CSV file not found, creating synthetic data for demonstration...")
         np.random.seed(42)
         n_samples = 1000
         
+        # Generate more realistic data
         df = pd.DataFrame({
-            'age': np.random.randint(30, 70, n_samples),
-            'gender': np.random.randint(0, 2, n_samples),
-            'ap_hi': np.random.randint(100, 180, n_samples),
-            'ap_lo': np.random.randint(60, 120, n_samples),
-            'cholesterol': np.random.randint(1, 4, n_samples),
-            'gluc': np.random.randint(1, 4, n_samples),
-            'smoke': np.random.randint(0, 2, n_samples),
-            'alco': np.random.randint(0, 2, n_samples),
-            'active': np.random.randint(0, 2, n_samples),
-            'height': np.random.randint(150, 190, n_samples),
-            'weight': np.random.randint(50, 100, n_samples)
+            'age': np.random.normal(50, 15, n_samples).clip(20, 80).astype(int),
+            'gender': np.random.randint(1, 3, n_samples),
+            'height': np.random.normal(170, 10, n_samples).clip(150, 190).astype(int),
+            'weight': np.random.normal(70, 15, n_samples).clip(45, 120).astype(int),
+            'ap_hi': np.random.normal(120, 15, n_samples).clip(90, 180).astype(int),
+            'ap_lo': np.random.normal(80, 10, n_samples).clip(60, 100).astype(int),
+            'cholesterol': np.random.choice([1, 2, 3], n_samples, p=[0.6, 0.3, 0.1]),
+            'gluc': np.random.choice([1, 2, 3], n_samples, p=[0.7, 0.2, 0.1]),
+            'smoke': np.random.choice([0, 1], n_samples, p=[0.8, 0.2]),
+            'alco': np.random.choice([0, 1], n_samples, p=[0.9, 0.1]),
+            'active': np.random.choice([0, 1], n_samples, p=[0.3, 0.7])
         })
         
-        # Create target based on risk factors
-        df['cardio'] = ((df['age'] > 50) | 
-                       (df['ap_hi'] > 140) | 
-                       (df['ap_lo'] > 90) | 
-                       (df['cholesterol'] > 2) | 
-                       (df['smoke'] == 1)).astype(int)
+        # Create more balanced target based on multiple factors
+        risk_score = (
+            (df['age'] > 55).astype(int) * 2 +
+            (df['ap_hi'] > 140).astype(int) * 2 +
+            (df['ap_lo'] > 90).astype(int) * 2 +
+            (df['cholesterol'] > 1).astype(int) +
+            (df['gluc'] > 1).astype(int) +
+            df['smoke'] +
+            df['alco'] -
+            df['active']
+        )
+        
+        # Convert risk score to probability
+        probability = 1 / (1 + np.exp(-0.5 * (risk_score - 4)))  # Logistic function
+        df['cardio'] = (np.random.random(n_samples) < probability).astype(int)
     
     # Check what columns are available and add missing ones with default values
     print("Available columns:", df.columns.tolist())
@@ -86,6 +95,14 @@ def load_and_prepare_data():
     df['age_risk'] = (df['age'] > 50).astype(int)
     df['bp_risk'] = ((df['ap_hi'] > 140) | (df['ap_lo'] > 90)).astype(int)
     df['lifestyle_risk'] = df['smoke'] + df['alco'] - df['active']
+    
+    # Normalize numerical features
+    numerical_features = ['age', 'ap_hi', 'ap_lo', 'height', 'weight']
+    for col in numerical_features:
+        if col in df.columns:
+            mean = df[col].mean()
+            std = df[col].std()
+            df[col] = (df[col] - mean) / std
     
     # Drop redundant features and ID column if it exists
     features_to_drop = ['height', 'weight']
@@ -268,17 +285,27 @@ def predict_cardiovascular_disease(input_data):
     # Convert to probability (clamp between 0 and 1)
     probability = max(0, min(1, prediction))
     
-    # Determine risk level
-    if probability < 0.3:
+    # Determine risk level with more granular thresholds
+    if probability < 0.2:
+        risk_level = "Very Low"
+        message = "Your cardiovascular risk appears to be very low based on the provided information."
+    elif probability < 0.4:
         risk_level = "Low"
+        message = "Your cardiovascular risk appears to be low, but maintaining a healthy lifestyle is recommended."
     elif probability < 0.6:
         risk_level = "Moderate"
-    else:
+        message = "Your cardiovascular risk is moderate. Consider discussing risk factors with your healthcare provider."
+    elif probability < 0.8:
         risk_level = "High"
+        message = "Your cardiovascular risk is high. It's recommended to consult with a healthcare provider."
+    else:
+        risk_level = "Very High"
+        message = "Your cardiovascular risk is very high. Immediate consultation with a healthcare provider is recommended."
     
     return {
-        "probability": round(probability, 4),
+        "probability": round(float(probability), 4),
         "risk_level": risk_level,
+        "message": message,
         "has_disease": probability > 0.5
     }
 

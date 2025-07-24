@@ -85,3 +85,5 @@ node_modules/
 *.db
 *.sqlite
 *.sqlite3
+
+*.README.md
