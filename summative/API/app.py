@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 from typing import Optional
 import pickle
 import numpy as np
-from prediction import predict_cardiovascular_disease, load_model
+from prediction import predict_cardiovascular_disease
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -170,5 +170,5 @@ if __name__ == "__main__":
         "app:app", 
         host="0.0.0.0", 
         port=port,
-        reload=False  # Disable reload in production
+        log_level="info"
     )
