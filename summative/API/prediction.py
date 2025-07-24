@@ -17,7 +17,7 @@ def load_and_prepare_data():
     """Load and prepare the cardiovascular disease dataset."""
     try:
         # Load the real dataset
-        df = pd.read_csv('cardio_train.csv', delimiter=';')
+        df = pd.read_csv('cardio_base.csv', delimiter=';')
         
         if df is None or df.empty:
             raise FileNotFoundError("CSV file is empty or could not be loaded")
@@ -47,13 +47,13 @@ def load_and_prepare_data():
         
     except FileNotFoundError:
         error_msg = """
-        ❌ Error: cardio_train.csv file not found!
-        
+        ❌ Error: cardio_base.csv file not found!
+
         Please download the dataset from:
-        https://www.kaggle.com/datasets/sulianova/cardiovascular-disease-dataset
+        https://www.kaggle.com/datasets/colewelkins/cardiovascular-disease
         
         And place it in the API folder:
-        summative/API/cardio_train.csv
+        summative/API/cardio_base.csv
         """
         print(error_msg)
         raise
