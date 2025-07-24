@@ -2,13 +2,15 @@
 FastAPI Application for Cardiovascular Disease Prediction
 """
 
+import os
+import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from typing import Dict, Any
-import uvicorn
-from prediction import predict_cardiovascular_disease, save_model
-import os
+from typing import Optional
+import pickle
+import numpy as np
+from prediction import predict_cardiovascular_disease, load_model
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -153,18 +155,20 @@ async def get_model_info():
         "target": "Cardiovascular disease probability (0-1)"
     }
 
-@app.before_first_request
-def initialize():
-    model_files = ['cardio_model.pkl', 'scaler.pkl', 'feature_names.pkl']
-    if not all(os.path.exists(f) for f in model_files):
-        print("Training model...")
-        save_model()
-        print("Model training completed!")
+@app.on_event("startup")
+def startup_event():
+    """Load the machine learning model at startup"""
+    try:
+        load_model()
+        print("Model loaded successfully")
+    except Exception as e:
+        print(f"Error loading model: {e}")
 
 if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))
     uvicorn.run(
-        "app:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=True
+        "app:app", 
+        host="0.0.0.0", 
+        port=port,
+        reload=False  # Disable reload in production
     )
