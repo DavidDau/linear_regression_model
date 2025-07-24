@@ -14,105 +14,49 @@ import pickle
 import os
 
 def load_and_prepare_data():
-    """Load and prepare the cardiovascular dataset"""
-    import os
-    
-    # Try different possible paths for the CSV file
-    possible_paths = [
-        '../linear_regression/cardio_base.csv',
-        'cardio_base.csv',
-        '../../linear_regression/cardio_base.csv',
-        os.path.join('..', 'linear_regression', 'cardio_base.csv'),
-        'cardio_data.csv'  # Add fallback name
-    ]
-    
-    df = None
-    for path in possible_paths:
-        try:
-            df = pd.read_csv(path)
-            print(f"Successfully loaded data from: {path}")
-            break
-        except FileNotFoundError:
-            continue
-    
-    if df is None:
-        print("CSV file not found, creating synthetic data for demonstration...")
-        np.random.seed(42)
-        n_samples = 1000
+    """Load and prepare the cardiovascular disease dataset."""
+    try:
+        # Load the real dataset
+        df = pd.read_csv('cardio_train.csv', delimiter=';')
         
-        # Generate more realistic data
-        df = pd.DataFrame({
-            'age': np.random.normal(50, 15, n_samples).clip(20, 80).astype(int),
-            'gender': np.random.randint(1, 3, n_samples),
-            'height': np.random.normal(170, 10, n_samples).clip(150, 190).astype(int),
-            'weight': np.random.normal(70, 15, n_samples).clip(45, 120).astype(int),
-            'ap_hi': np.random.normal(120, 15, n_samples).clip(90, 180).astype(int),
-            'ap_lo': np.random.normal(80, 10, n_samples).clip(60, 100).astype(int),
-            'cholesterol': np.random.choice([1, 2, 3], n_samples, p=[0.6, 0.3, 0.1]),
-            'gluc': np.random.choice([1, 2, 3], n_samples, p=[0.7, 0.2, 0.1]),
-            'smoke': np.random.choice([0, 1], n_samples, p=[0.8, 0.2]),
-            'alco': np.random.choice([0, 1], n_samples, p=[0.9, 0.1]),
-            'active': np.random.choice([0, 1], n_samples, p=[0.3, 0.7])
-        })
+        if df is None or df.empty:
+            raise FileNotFoundError("CSV file is empty or could not be loaded")
+            
+        print("✅ Successfully loaded real cardiovascular disease data")
+        print(f"📊 Dataset shape: {df.shape}")
         
-        # Create more balanced target based on multiple factors
-        risk_score = (
-            (df['age'] > 55).astype(int) * 2 +
-            (df['ap_hi'] > 140).astype(int) * 2 +
-            (df['ap_lo'] > 90).astype(int) * 2 +
-            (df['cholesterol'] > 1).astype(int) +
-            (df['gluc'] > 1).astype(int) +
-            df['smoke'] +
-            df['alco'] -
-            df['active']
-        )
+        # Basic data cleaning
+        df = df.drop('id', axis=1, errors='ignore')  # Remove ID column if it exists
+        df = df.dropna()  # Remove any rows with missing values
         
-        # Convert risk score to probability
-        probability = 1 / (1 + np.exp(-0.5 * (risk_score - 4)))  # Logistic function
-        df['cardio'] = (np.random.random(n_samples) < probability).astype(int)
-    
-    # Check what columns are available and add missing ones with default values
-    print("Available columns:", df.columns.tolist())
-    
-    # Add missing columns with reasonable defaults if they don't exist
-    if 'gluc' not in df.columns:
-        df['gluc'] = 1  # Default to normal glucose
-    if 'alco' not in df.columns:
-        df['alco'] = 0  # Default to no alcohol
-    if 'active' not in df.columns:
-        df['active'] = 1  # Default to active
-    if 'cardio' not in df.columns:
-        # Create a synthetic target based on risk factors
-        df['cardio'] = ((df['age'] > 50) | 
-                       (df['ap_hi'] > 140) | 
-                       (df['ap_lo'] > 90) | 
-                       (df['cholesterol'] > 2) | 
-                       (df['smoke'] == 1)).astype(int)
-    
-    # Feature engineering
-    df['bmi'] = df['weight'] / (df['height'] / 100) ** 2
-    df['pulse_pressure'] = df['ap_hi'] - df['ap_lo']
-    df['age_risk'] = (df['age'] > 50).astype(int)
-    df['bp_risk'] = ((df['ap_hi'] > 140) | (df['ap_lo'] > 90)).astype(int)
-    df['lifestyle_risk'] = df['smoke'] + df['alco'] - df['active']
-    
-    # Normalize numerical features
-    numerical_features = ['age', 'ap_hi', 'ap_lo', 'height', 'weight']
-    for col in numerical_features:
-        if col in df.columns:
-            mean = df[col].mean()
-            std = df[col].std()
-            df[col] = (df[col] - mean) / std
-    
-    # Drop redundant features and ID column if it exists
-    features_to_drop = ['height', 'weight']
-    if 'id' in df.columns:
-        features_to_drop.append('id')
-    
-    X = df.drop(['cardio'] + [col for col in features_to_drop if col in df.columns], axis=1)
-    y = df['cardio']
-    
-    return X, y
+        # Convert age from days to years
+        df['age'] = (df['age'] / 365).round().astype(int)
+        
+        # Remove physiologically impossible values
+        df = df[
+            (df['ap_hi'] >= 70) & (df['ap_hi'] <= 240) &  # Systolic BP range
+            (df['ap_lo'] >= 40) & (df['ap_lo'] <= 120) &  # Diastolic BP range
+            (df['height'] >= 120) & (df['height'] <= 220) &  # Height range
+            (df['weight'] >= 30) & (df['weight'] <= 200)  # Weight range
+        ]
+        
+        print("✨ Data cleaning complete")
+        print(f"📊 Final dataset shape: {df.shape}")
+        
+        return df
+        
+    except FileNotFoundError:
+        error_msg = """
+        ❌ Error: cardio_train.csv file not found!
+        
+        Please download the dataset from:
+        https://www.kaggle.com/datasets/sulianova/cardiovascular-disease-dataset
+        
+        And place it in the API folder:
+        summative/API/cardio_train.csv
+        """
+        print(error_msg)
+        raise
 
 def train_models():
     """Train multiple models and select the best one"""
