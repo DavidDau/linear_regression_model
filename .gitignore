@@ -36,8 +36,13 @@ ENV/
 .DS_Store
 Thumbs.db
 
-# Model files (optional - you might want to include these)
-*.pkl
+# Model files - COMMENTED OUT to allow deployment
+# *.pkl  <- This was preventing your model files from being deployed
+
+# Specific model files to include (optional - for documentation)
+# !cardio_model.pkl
+# !scaler.pkl  
+# !feature_names.pkl
 
 # Flutter
 FlutterApp/.dart_tool/
@@ -45,6 +50,38 @@ FlutterApp/.packages
 FlutterApp/build/
 FlutterApp/.flutter-plugins
 FlutterApp/.flutter-plugins-dependencies
+FlutterApp/pubspec.lock
 
 # Logs
 *.log
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# pytest cache
+.pytest_cache/
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# Node modules (if any)
+node_modules/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
