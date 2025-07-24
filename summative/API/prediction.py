@@ -15,87 +15,54 @@ import os
 
 def load_and_prepare_data():
     """Load and prepare the cardiovascular dataset"""
-    import os
-    
-    # Try different possible paths for the CSV file
-    possible_paths = [
-        '../linear_regression/cardio_base.csv',
-        'cardio_base.csv',
-        '../../linear_regression/cardio_base.csv',
-        os.path.join('..', 'linear_regression', 'cardio_base.csv'),
-        'cardio_data.csv'  # Add fallback name
-    ]
-    
-    df = None
-    for path in possible_paths:
-        try:
-            df = pd.read_csv(path)
-            print(f"Successfully loaded data from: {path}")
-            break
-        except FileNotFoundError:
-            continue
-    
-    if df is None:
-        # Create synthetic data if CSV is not found (for deployment)
-        print("CSV file not found, creating synthetic data for demonstration...")
-        np.random.seed(42)
-        n_samples = 1000
+    try:
+        # Get the directory where this script is located
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        csv_path = os.path.join(script_dir, '..', 'linear_regression', 'cardio_base.csv')
         
-        df = pd.DataFrame({
-            'age': np.random.randint(30, 70, n_samples),
-            'gender': np.random.randint(0, 2, n_samples),
-            'ap_hi': np.random.randint(100, 180, n_samples),
-            'ap_lo': np.random.randint(60, 120, n_samples),
-            'cholesterol': np.random.randint(1, 4, n_samples),
-            'gluc': np.random.randint(1, 4, n_samples),
-            'smoke': np.random.randint(0, 2, n_samples),
-            'alco': np.random.randint(0, 2, n_samples),
-            'active': np.random.randint(0, 2, n_samples),
-            'height': np.random.randint(150, 190, n_samples),
-            'weight': np.random.randint(50, 100, n_samples)
-        })
+        # Load the real dataset
+        df = pd.read_csv(csv_path)
+        if df is None or df.empty:
+            raise FileNotFoundError(f"CSV file is empty or could not be loaded: {csv_path}")
+            
+        print(f"Successfully loaded data from: {csv_path}")
+        print(f"Dataset shape: {df.shape}")
+        print(f"Columns found: {df.columns.tolist()}")
         
-        # Create target based on risk factors
-        df['cardio'] = ((df['age'] > 50) | 
-                       (df['ap_hi'] > 140) | 
-                       (df['ap_lo'] > 90) | 
-                       (df['cholesterol'] > 2) | 
-                       (df['smoke'] == 1)).astype(int)
-    
-    # Check what columns are available and add missing ones with default values
-    print("Available columns:", df.columns.tolist())
-    
-    # Add missing columns with reasonable defaults if they don't exist
-    if 'gluc' not in df.columns:
-        df['gluc'] = 1  # Default to normal glucose
-    if 'alco' not in df.columns:
-        df['alco'] = 0  # Default to no alcohol
-    if 'active' not in df.columns:
-        df['active'] = 1  # Default to active
-    if 'cardio' not in df.columns:
-        # Create a synthetic target based on risk factors
-        df['cardio'] = ((df['age'] > 50) | 
-                       (df['ap_hi'] > 140) | 
-                       (df['ap_lo'] > 90) | 
-                       (df['cholesterol'] > 2) | 
-                       (df['smoke'] == 1)).astype(int)
-    
-    # Feature engineering
-    df['bmi'] = df['weight'] / (df['height'] / 100) ** 2
-    df['pulse_pressure'] = df['ap_hi'] - df['ap_lo']
-    df['age_risk'] = (df['age'] > 50).astype(int)
-    df['bp_risk'] = ((df['ap_hi'] > 140) | (df['ap_lo'] > 90)).astype(int)
-    df['lifestyle_risk'] = df['smoke'] + df['alco'] - df['active']
-    
-    # Drop redundant features and ID column if it exists
-    features_to_drop = ['height', 'weight']
-    if 'id' in df.columns:
-        features_to_drop.append('id')
-    
-    X = df.drop(['cardio'] + [col for col in features_to_drop if col in df.columns], axis=1)
-    y = df['cardio']
-    
-    return X, y
+        # Basic data cleaning
+        if 'id' in df.columns:
+            df = df.drop('id', axis=1)
+        
+        # Remove any rows with missing values
+        df = df.dropna()
+        
+        # Feature engineering
+        df['bmi'] = df['weight'] / (df['height'] / 100) ** 2
+        df['pulse_pressure'] = df['ap_hi'] - df['ap_lo']
+        df['age_risk'] = (df['age'] > 50).astype(int)
+        df['bp_risk'] = ((df['ap_hi'] > 140) | (df['ap_lo'] > 90)).astype(int)
+        df['lifestyle_risk'] = df['smoke'] + df['alco'] - df['active']
+        
+        # Drop redundant features
+        features_to_drop = ['height', 'weight']
+        X = df.drop(['cardio'] + features_to_drop, axis=1)
+        y = df['cardio']
+        
+        return X, y
+        
+    except FileNotFoundError:
+        error_msg = f"""
+        ❌ Error: Could not find CSV file at:
+        {csv_path}
+        
+        Please ensure cardio_base.csv exists in:
+        summative/linear_regression/cardio_base.csv
+        """
+        print(error_msg)
+        raise
+    except Exception as e:
+        print(f"❌ Error processing data: {str(e)}")
+        raise
 
 def train_models():
     """Train multiple models and select the best one"""
@@ -168,9 +135,9 @@ def save_model():
     with open(os.path.join(script_dir, 'feature_names.pkl'), 'wb') as f:
         pickle.dump(feature_names, f)
     
-    print("\n✅ Model saved as 'cardio_model.pkl'")
-    print("✅ Scaler saved as 'scaler.pkl'")
-    print("✅ Feature names saved as 'feature_names.pkl'")
+    print("\n Model saved as 'cardio_model.pkl'")
+    print(" Scaler saved as 'scaler.pkl'")
+    print(" Feature names saved as 'feature_names.pkl'")
     
     return feature_names
 
