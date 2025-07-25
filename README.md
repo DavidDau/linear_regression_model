@@ -13,7 +13,7 @@ This project predicts the presence or absence of cardiovascular disease based on
 
 ## Public API Endpoint
 
-https://linear-regression-model-hh30.onrender.com
+*https://linear-regression-model-hh30.onrender.com*
 
 ## Video Demo
 
