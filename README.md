@@ -9,7 +9,7 @@ To mitigate labor shortages and boost productivity by leveraging predictive anal
 This project predicts the presence or absence of cardiovascular disease based on various patient metrics such as age, gender, height, weight, blood pressure, cholesterol, glucose, smoking, alcohol consumption, and physical activity. The dataset used is publicly available from the [Kaggle Cardiovascular Disease Dataset] (https://www.kaggle.com/datasets/colewelkins/cardiovascular-disease).
 
 ## API Links
-Public API Endpoint: *https://linear-regression-model-hh30.onrender.com*
+Public API Endpoint: *https://linear-regression-model-hh30.onrender.com* /n
 Swagger UI Documentation: *https://linear-regression-model-hh30.onrender.com/docs*
 
 ## Video Demo
