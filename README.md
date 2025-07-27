@@ -1,26 +1,22 @@
 # Cardiovascular Disease Prediction System
-
 A comprehensive machine learning system for predicting cardiovascular disease risk, featuring data analysis, API backend, and Flutter mobile application.
 
 ## My Mission
-
 To mitigate labor shortages and boost productivity by leveraging predictive analytics to identify and prevent cardio-related diseases early, ensuring a healthier workforce and a more resilient economy.
 .
 
 ## Data Description & Source
-
 This project predicts the presence or absence of cardiovascular disease based on various patient metrics such as age, gender, height, weight, blood pressure, cholesterol, glucose, smoking, alcohol consumption, and physical activity. The dataset used is publicly available from the [Kaggle Cardiovascular Disease Dataset] (https://www.kaggle.com/datasets/colewelkins/cardiovascular-disease).
 
-## Public API Endpoint
+## API Links
+Public API Endpoint: *https://linear-regression-model-hh30.onrender.com*
 
-*https://linear-regression-model-hh30.onrender.com*
+Swagger UI Documentation: *https://linear-regression-model-hh30.onrender.com/docs*
 
 ## Video Demo
-
 Watch a short demo here:*https://youtu.be/YOUR_DEMO_VIDEO_LINK*
 
 ## How to Run the Mobile App
-
 1. Install [Flutter]: (https://docs.flutter.dev/get-started/install) on your machine.
 2. Open a terminal and navigate to the FlutterApp directory:
    _cd linear_regression_model/summative/FlutterApp_
