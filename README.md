@@ -27,5 +27,7 @@ Watch a short demo here:*https://youtu.be/iQIxIjjsJlg?si=frAtbJ_8V9Qx8dxN*
    _cd linear_regression_model/summative/FlutterApp_
 3. Get dependencies: _flutter pub get_
 4. Run the app on your emulator or connected device: _flutter run_
+5. Once the app starts, press the predict button to be redirected to the input page
+6. Input the patient's data and press the predict button at the buttom
 
 Make sure your device/ emulator has internet access to connect to the API endpoint above.
